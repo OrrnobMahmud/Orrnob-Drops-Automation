@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="orrnob-drops-automation",
+    name="orrnob_drops_automation",
     version="0.1.2",
     description="A package for airdrop automation.",
     long_description=open("README.md", "r").read(),
