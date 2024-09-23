@@ -8,7 +8,6 @@ from requests.auth import HTTPProxyAuth
 
 init(autoreset=True)
 
-
 class Base:
     def __init__(self):
         # Initialize colorama styles
@@ -25,16 +24,9 @@ class Base:
         caller_dir = os.path.dirname(
             os.path.abspath(sys._getframe(1).f_code.co_filename)
         )
-
-        # Join the caller directory with the file name to form the full file path
-        file_path = os.path.join(caller_dir, file_name)
-
-        return file_path
+        return os.path.join(caller_dir, file_name)
 
     def create_banner(self, game_name: str):
-        # Initialize colorama
-        init()
-        
         # Create banner with game name
         banner = f"""{Fore.GREEN}
    ___                   _      __  __      _                 _ 
@@ -47,16 +39,17 @@ class Base:
     Github  : https://github.com/OrrnobMahmud
     Telegram: https://t.me/verifiedcryptoairdops
         {Style.RESET_ALL}"""
-        
         return banner
 
     def get_config(self, config_file: str, config_name: str):
-        # Get config from config file
-        config_status = (
-            json.load(open(config_file, "r")).get(config_name, "false").lower()
-            == "true"
-        )
-        return config_status
+        # Get config from config file with error handling
+        try:
+            with open(config_file, "r") as file:
+                config = json.load(file)
+                return config.get(config_name, "false").lower() == "true"
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            self.log(f"{self.red}Error reading config file: {self.white}{e}")
+            return False
 
     def clear_terminal(self):
         # For Windows
@@ -70,20 +63,16 @@ class Base:
         now = datetime.now().isoformat(" ").split(".")[0]
         print(f"{self.black}[{now}]{self.reset} {msg}{self.reset}")
 
-    # Handle proxy version
     def format_proxy(self, proxy_info):
         return {"http": f"{proxy_info}", "https": f"{proxy_info}"}
 
     def check_ip(self, proxy_info):
         url = "https://api.ipify.org?format=json"
-
         proxies = self.format_proxy(proxy_info=proxy_info)
 
-        # Parse the proxy credentials if present
         if "@" in proxy_info:
             proxy_credentials = proxy_info.split("@")[0]
-            proxy_user = proxy_credentials.split(":")[1]
-            proxy_pass = proxy_credentials.split(":")[2]
+            proxy_user, proxy_pass = proxy_credentials.split(":")[1:3]
             auth = HTTPProxyAuth(proxy_user, proxy_pass)
         else:
             auth = None
@@ -106,11 +95,12 @@ class Base:
             ip, port = endpoint.split(":", 1)
             self.log(f"{self.green}Input IP Address: {self.white}{ip}")
             return {"user_name": user_name, "pass": password, "ip": ip, "port": port}
-        except:
+        except Exception as e:
             self.log(
-                f"{self.red}Check proxy format: {self.white}http://user:pass@ip:port"
+                f"{self.red}Check proxy format: {self.white}http://user:pass@ip:port - {e}"
             )
             return None
 
 
 base = Base()
+
